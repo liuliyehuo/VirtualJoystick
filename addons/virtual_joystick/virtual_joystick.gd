@@ -1,134 +1,202 @@
 @tool
-class_name GodotStick extends Control
+class_name VirtualJoystick extends Control
 
-signal stick_move(value: Vector2, distance: float, angle: float, angle_clockwise: float, angle_not_clockwise: float)
-signal angle_change(angle: float, angle_clockwise: float, angle_not_clockwise: float)
-signal value_change(value: Vector2)
-signal distance_change(distance: float)
 
-var joystick_radius: float = 100
-var joystick_border_widht = 10
-var joystick_start_position: Vector2 = Vector2(joystick_radius + joystick_border_widht, joystick_radius + joystick_border_widht)
-var stick_radius: float = 45
-var stick_border_width = -1
-var stick_start_position: Vector2 = Vector2(joystick_radius + joystick_border_widht, joystick_radius + joystick_border_widht)
+#region Signals =================================================
+## Issued when the analog value is changed.
+signal analogic_changed(value: Vector2, distance: float, angle: float, angle_clockwise: float, angle_not_clockwise: float)
+#endregion Signals ==============================================
 
-var dragging: bool = false
-var drag_started_inside: bool = false
-var click_in: bool = false
 
+#region Private Propertys =======================================
+var _joystick: VirtualJoystickCircle = null
+var _stick: VirtualJoystickCircle = null
+
+var _joystick_radius: float = 100
+var _joystick_border_widht = 10
+var _joystick_start_position: Vector2 = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+
+var _stick_radius: float = 45
+var _stick_border_width = -1
+var _stick_start_position: Vector2 = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+
+var _dragging: bool = false
+var _drag_started_inside: bool = false
+var _click_in: bool = false
+
+var _delta: Vector2 = Vector2.ZERO
+#endregion Private Propertys ====================================
+
+
+#region Plubic Propertys ========================================
+var value: Vector2 = Vector2.ZERO
+var distance: float = 0.0
+var angle_degrees_clockwise: float = 0.0
+var angle_degrees_not_clockwise: float = 0.0
+#endregion Plubic Propertys =====================================
+
+#region Exports ===================================================
 @export_category("Joystick")
 @export_color_no_alpha() var joystick_color: Color = Color.WHITE:
 	set(value):
 		joystick_color = value
-		joystick.color = value
-		joystick.opacity = joystick_opacity
+		_joystick.color = value
+		_joystick.opacity = joystick_opacity
 		queue_redraw()
-@export_range(0, 1) var joystick_opacity: float = 0.8:
+@export_range(0.0, 1.0, 0.001, "suffix:alpha") var joystick_opacity: float = 0.8:
 	set(value):
 		joystick_opacity = value
-		joystick.opacity = value
+		_joystick.opacity = value
 		queue_redraw()
-@export var joystick_border: float = 10:
+@export_range(1.0, 20.0, 0.01, "suffix:px", "or_greater") var joystick_border: float = 10:
 	set(value):
 		joystick_border = value
-		joystick.width = value
-		joystick_border_widht = value
-		joystick_start_position = Vector2(joystick_radius + joystick_border_widht, joystick_radius + joystick_border_widht)
-		joystick.position = joystick_start_position
-		stick_start_position = Vector2(joystick_radius + joystick_border_widht, joystick_radius + joystick_border_widht)
-		stick.position = stick_start_position
+		_joystick.width = value
+		_joystick_border_widht = value
+		_joystick_start_position = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+		_joystick.position = _joystick_start_position
+		_stick_start_position = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+		_stick.position = _stick_start_position
 		queue_redraw()
 @export_category("Stick")
 @export_color_no_alpha() var stick_color: Color = Color.WHITE:
 	set(value):
 		stick_color = value
-		stick.color = value
-		stick.opacity = stick_opacity
+		_stick.color = value
+		_stick.opacity = stick_opacity
 		queue_redraw()
-@export_range(0, 1) var stick_opacity: float = 0.8:
+@export_range(0.0, 1.0, 0.001, "suffix:alpha") var stick_opacity: float = 0.8:
 	set(value):
 		stick_opacity = value
-		stick.opacity = value
+		_stick.opacity = value
 		queue_redraw()
-@export_category("All")
-@export var scale_factor: float = 1:
+@export_category("Area")
+@export_range(0.1, 2.0, 0.001, "suffix:px", "or_greater") var scale_factor: float = 1:
 	set(value):
 		scale_factor = value
 		scale = Vector2(scale_factor, scale_factor)
 		queue_redraw()
+#endregion Exports =================================================
 
-var joystick: VirtualJoystickCircle = VirtualJoystickCircle.new(joystick_start_position, joystick_radius, joystick_border_widht, false, joystick_color, joystick_opacity)
-var stick: VirtualJoystickCircle = VirtualJoystickCircle.new(stick_start_position, stick_radius, stick_border_width, true, stick_color, stick_opacity)
 
+#region Engine Methods =============================================
 func _ready() -> void:
-	set_size(Vector2(joystick_radius * 2 + joystick_border_widht * 2, joystick_radius * 2 + joystick_border_widht * 2))
-	pass
+	set_size(Vector2(_joystick_radius * 2 + _joystick_border_widht * 2, _joystick_radius * 2 + _joystick_border_widht * 2))
 
 
 func _draw() -> void:
-	joystick.draw(self, false)
-	stick.draw(self, false)
+	_joystick.draw(self, false)
+	_stick.draw(self, false)
 	scale = Vector2(scale_factor, scale_factor)
-	set_size(Vector2((joystick_radius * 2) + (joystick_border_widht * 2), (joystick_radius * 2) + (joystick_border_widht * 2)))
+	set_size(Vector2((_joystick_radius * 2) + (_joystick_border_widht * 2), (_joystick_radius * 2) + (_joystick_border_widht * 2)))
 	
 	
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		if event.pressed:
-			var distance = event.position.distance_to(joystick.position)
-			drag_started_inside = distance <= joystick.radius + joystick.width / 2
-			if drag_started_inside:
-				click_in = true
-				move_stick(event.position)
+			distance = event.position.distance_to(_joystick.position)
+			_drag_started_inside = distance <= _joystick.radius + _joystick.width / 2
+			if _drag_started_inside:
+				_click_in = true
+				_update_stick(event.position)
 		else:
-			stick.position = stick_start_position
-			if click_in:
+			_stick.position = _stick_start_position
+			if _click_in:
 				queue_redraw()
-				process_joystick_input(Vector2.ZERO)
-			click_in = false
+				_delta = Vector2.ZERO
+				value = Vector2.ZERO
+				distance = 0.0
+				angle_degrees_clockwise = 0.0
+				angle_degrees_not_clockwise = 0.0
+				_update_emit_signals()
+			_click_in = false
 	elif event is InputEventScreenDrag:
-		if drag_started_inside:
-			move_stick(event.position)
-		
+		if _drag_started_inside:
+			_update_stick(event.position)
 
-func move_stick(position: Vector2) -> void:
-	var delta = position - stick_start_position
-	if delta.length() > joystick.radius:
-		delta = delta.normalized() * joystick.radius
-	stick.position = stick_start_position + delta
+
+func _init() -> void:
+	_joystick = VirtualJoystickCircle.new(_joystick_start_position, _joystick_radius, _joystick_border_widht, false, joystick_color, joystick_opacity)
+	_stick = VirtualJoystickCircle.new(_stick_start_position, _stick_radius, _stick_border_width, true, stick_color, stick_opacity)
+
+	_joystick.color = joystick_color
+	_joystick.opacity = joystick_opacity
+
+	_joystick.width = joystick_border
+	_joystick_border_widht = joystick_border
+	_joystick_start_position = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+	_joystick.position = _joystick_start_position
+	_stick_start_position = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
+	_stick.position = _stick_start_position
+
+	_stick.color = stick_color
+	_stick.opacity = stick_opacity
+
+	scale = Vector2(scale_factor, scale_factor)
+
 	queue_redraw()
-	process_joystick_input(delta)
+#endregion Engine Methods =============================================
 
 
-func get_angle(delta: Vector2, continuos: bool, clockwise: bool) -> float:
-	var angle_degress = 0
+#region Private Methods ============================================
+func _update_stick(position: Vector2) -> void:
+	_delta = position - _stick_start_position
+	if _delta.length() > _joystick.radius:
+		_delta = _delta.normalized() * _joystick.radius
+	_stick.position = _stick_start_position + _delta
+	queue_redraw()
+	value = _get_value_delta(_delta)
+	distance = _get_value_delta(_delta).length()
+	angle_degrees_clockwise = _get_angle_delta(_delta, true, true)
+	angle_degrees_not_clockwise = _get_angle_delta(_delta, true, false)
+	_update_emit_signals()
+
+
+func _update_emit_signals() -> void:
+	analogic_changed.emit(_get_value_delta(_delta), _get_value_delta(_delta).length(), _get_angle_delta(_delta, false, false), _get_angle_delta(_delta, true, true), _get_angle_delta(_delta, true, false))
+
+
+func _get_angle_delta(delta: Vector2, continuos: bool, clockwise: bool) -> float:
+	var _angle_degress = 0
 	if continuos and not clockwise:
-		angle_degress = rad_to_deg(atan2(-delta.y, delta.x))
+		_angle_degress = rad_to_deg(atan2(-delta.y, delta.x))
 	else:
-		angle_degress = rad_to_deg(atan2(delta.y, delta.x))
-	if continuos and angle_degress < 0:
-		angle_degress += 360
-	return angle_degress
+		_angle_degress = rad_to_deg(atan2(delta.y, delta.x))
+	if continuos and _angle_degress < 0:
+		_angle_degress += 360
+	return _angle_degress
 	
 	
-func get_value(delta: Vector2) -> Vector2:
-	return delta / joystick.radius
+func _get_value_delta(delta: Vector2) -> Vector2:
+	return delta / _joystick.radius
 	
-	
-func get_distance(delta: Vector2) -> float:
-	return get_value(delta).length()
-	
+#endregion Private Methods ===========================================
 
-func process_joystick_input(input_vector: Vector2) -> void:
-	emit_signal("stick_move", get_value(input_vector), get_distance(input_vector), get_angle(input_vector, false, false), get_angle(input_vector, true, true), get_angle(input_vector, true, false))
-	emit_signal("angle_change", get_angle(input_vector, false, false), get_angle(input_vector, true, true), get_angle(input_vector, true, false))
-	emit_signal("value_change", get_value(input_vector))
-	emit_signal("distance_change", get_distance(input_vector))
-	pass
-	
-#*********************************************************************
 
+#region Public Methods =============================================
+func get_value() -> Vector2:
+	return value
+
+
+func get_angle_degrees_clockwise() -> float:
+	return angle_degrees_clockwise
+
+
+func get_angle_degrees_not_clockwise() -> float:
+	return angle_degrees_not_clockwise
+
+
+func get_angle_degress(continuos: bool = true, clockwise: bool = false) -> float:
+	return _get_angle_delta(_delta, continuos, clockwise)
+
+
+func get_distance() -> float:
+	return distance
+
+#endregion Public Methods ==========================================
+
+
+#region Classes ====================================================
 class VirtualJoystickCircle extends RefCounted:
 	var position: Vector2
 	var radius: float
@@ -170,3 +238,4 @@ class VirtualJoystickCircle extends RefCounted:
 				canvas_item.draw_circle(self.position + Vector2(self.radius, self.radius), self.radius, self.color, self.filled, self.width, self.antialiased)
 			else:
 				canvas_item.draw_circle(self.position, self.radius, self.color, self.filled, self.width, self.antialiased)
+#endregion Classes =================================================
