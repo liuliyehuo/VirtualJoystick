@@ -50,7 +50,7 @@ Designed for mobile and touchscreen games, it provides smooth analog input handl
 | `joystick_color`    | `Color` | Base color of the joystick background.     |
 | `joystick_opacity`  | `float` | Opacity of the joystick base (0–1).        |
 | `joystick_border`   | `float` | Width of the joystick border.              |
-| `joystick_deadzone` | `float` | Linear deadzone threshold (0–1).           |
+| `joystick_deadzone` | `float` | Linear deadzone threshold (0–0.9).         |
 | `scale_factor`      | `float` | Global scale multiplier for joystick size. |
 | `active`            | `bool`  | Enables or disables joystick input.        |
 | `stick_color`       | `Color` | Color of the movable stick (thumb).        |
