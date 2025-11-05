@@ -34,6 +34,8 @@ var in_deadzone: bool = false:
 	set(value):
 		if value != in_deadzone:
 			in_deadzone = value
+			if not active:
+				return
 			if in_deadzone:
 				deadzone_enter.emit()
 			else:
