@@ -11,6 +11,8 @@ signal analogic_changed(
 	angle_clockwise: float,
 	angle_not_clockwise: float
 )
+signal deadzone_enter
+signal deadzone_leave
 #endregion Signals ===============================================
 
 #region Private Properties ======================================
@@ -28,6 +30,14 @@ var _stick_start_position: Vector2 = _joystick_start_position
 var _drag_started_inside := false
 var _click_in := false
 var _delta: Vector2 = Vector2.ZERO
+var in_deadzone: bool = false:
+	set(value):
+		if value != in_deadzone:
+			in_deadzone = value
+			if in_deadzone:
+				deadzone_enter.emit()
+			else:
+				deadzone_leave.emit()
 #endregion Private Properties ====================================
 
 #region Public Properties =======================================
@@ -114,6 +124,7 @@ func _init() -> void:
 	_joystick = VirtualJoystickCircle.new(_joystick_start_position, _joystick_radius, _joystick_border_width, false, joystick_color, joystick_opacity)
 	_stick = VirtualJoystickCircle.new(_stick_start_position, _stick_radius, _stick_border_width, true, stick_color, stick_opacity)
 	queue_redraw()
+	
 
 func _ready() -> void:
 	set_size(Vector2(_joystick_radius * 2 + _joystick_border_width * 2, _joystick_radius * 2 + _joystick_border_width * 2))
@@ -168,6 +179,12 @@ func _reset_values() -> void:
 	angle_degrees_clockwise = 0.0
 	angle_degrees_not_clockwise = 0.0
 	_stick.position = _stick_start_position
+	
+	var length = (_delta / _joystick.radius).length()
+	var deadzone = clamp(joystick_deadzone, 0.0, 0.99)
+	if length <= deadzone:
+		in_deadzone = true
+		
 	queue_redraw()
 
 ## Applies linear deadzone adjustment and calculates resulting angles.
@@ -177,9 +194,11 @@ func _apply_deadzone(input_value: Vector2) -> Dictionary:
 	var deadzone = clamp(joystick_deadzone, 0.0, 0.99)
 
 	if length <= deadzone:
+		in_deadzone = true
 		result = Vector2.ZERO
 		length = 0.0
 	else:
+		in_deadzone = false
 		# Re-scale linearly between deadzone and full range
 		var adjusted = (length - deadzone) / (1.0 - deadzone)
 		result = input_value.normalized() * adjusted
@@ -209,7 +228,17 @@ func _apply_deadzone(input_value: Vector2) -> Dictionary:
 func _update_emit_signals() -> void:
 	if not active:
 		return
-	analogic_changed.emit(
+	if in_deadzone:
+		if _click_in == false:
+			analogic_changed.emit(
+				Vector2.ZERO,
+				0.0,
+				0.0,
+				0.0,
+				0.0
+				)
+	else:
+		analogic_changed.emit(
 		value,
 		distance,
 		angle_degrees,
