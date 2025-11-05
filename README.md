@@ -1,6 +1,6 @@
 # Virtual Joystick for Godot
 
-**VirtualJoystick** is a lightweight and fully customizable on-screen joystick plugin for **Godot Engine 4.5+**.  
+**VirtualJoystick** is a lightweight and fully customizable on-screen joystick plugin for **Godot Engine 4.4+**.  
 Designed for mobile and touchscreen games, it provides smooth analog input handling, complete deadzone control, and responsive signals for precise player movement.
 
 ---
