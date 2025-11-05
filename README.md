@@ -98,8 +98,3 @@ func _process(delta):
 **Screenshot InputManager**
 
 ![Screenshot 1](./addons/virtual_joystick/screenshots/2.png)
-
-<video width="auto" height="auto" controls>
-  <source src="./addons/virtual_joystick/screenshots/video.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
