@@ -40,6 +40,9 @@ var value: Vector2 = Vector2.ZERO
 ## Distance of the stick from the joystick center (0.0 to 1.0).
 var distance: float = 0.0
 
+## Angle in degress.
+var angle_degrees: float = 0.0
+
 ## Angle in degrees, measured clockwise.
 var angle_degrees_clockwise: float = 0.0
 
@@ -79,7 +82,7 @@ var angle_degrees_not_clockwise: float = 0.0
 		queue_redraw()
 
 ## Deadzone threshold. Values below this range are ignored.
-@export_range(0.0, 0.5, 0.001, "suffix:length") var joystick_deadzone: float = 0.0
+@export_range(0.0, 0.9, 0.001, "suffix:length") var joystick_deadzone: float = 0.0
 
 ## Global scale factor of the joystick.
 @export_range(0.1, 2.0, 0.001, "suffix:x", "or_greater") var scale_factor: float = 1:
@@ -131,9 +134,6 @@ func _draw() -> void:
 
 
 func _gui_input(event: InputEvent) -> void:
-	if not active:
-		return
-
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			distance = event.position.distance_to(_joystick.position)
@@ -164,6 +164,7 @@ func _update_stick(_position: Vector2) -> void:
 	var processed = _apply_deadzone(_delta / _joystick.radius)
 	value = processed.value
 	distance = processed.distance
+	angle_degrees = processed.angle_degrees
 	angle_degrees_clockwise = processed.angle_clockwise
 	angle_degrees_not_clockwise = processed.angle_not_clockwise
 
@@ -174,6 +175,7 @@ func _reset_values() -> void:
 	_delta = Vector2.ZERO
 	value = Vector2.ZERO
 	distance = 0.0
+	angle_degrees = 0.0
 	angle_degrees_clockwise = 0.0
 	angle_degrees_not_clockwise = 0.0
 	_stick.position = _stick_start_position
@@ -197,20 +199,33 @@ func _apply_deadzone(input_value: Vector2) -> Dictionary:
 
 	var angle_cw = _get_angle_delta(result * _joystick.radius, true, true)
 	var angle_ccw = _get_angle_delta(result * _joystick.radius, true, false)
-
-	return {
-		"value": result,
-		"distance": length,
-		"angle_clockwise": angle_cw,
-		"angle_not_clockwise": angle_ccw
-	}
+	var angle = _get_angle_delta(result * _joystick.radius, false, false)
+	
+	if active:
+		return {
+			"value": result,
+			"distance": length,
+			"angle_clockwise": angle_cw,
+			"angle_not_clockwise": angle_ccw,
+			"angle_degrees": angle
+		}
+	else:
+		return {
+			"value": Vector2.ZERO,
+			"distance": 0.0,
+			"angle_clockwise": 0.0,
+			"angle_not_clockwise": 0.0,
+			"angle_degrees": 0.0
+		}
 
 
 func _update_emit_signals() -> void:
+	if not active:
+		return
 	analogic_changed.emit(
 		value,
 		distance,
-		_get_angle_delta(_delta, false, false),
+		angle_degrees,
 		angle_degrees_clockwise,
 		angle_degrees_not_clockwise
 	)
