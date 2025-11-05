@@ -20,7 +20,6 @@ var _stick_radius: float = 45
 var _stick_border_width = -1
 var _stick_start_position: Vector2 = Vector2(_joystick_radius + _joystick_border_widht, _joystick_radius + _joystick_border_widht)
 
-var _dragging: bool = false
 var _drag_started_inside: bool = false
 var _click_in: bool = false
 
@@ -229,22 +228,22 @@ class VirtualJoystickCircle extends RefCounted:
 			self.color.a = opacity
 
 	func _init(
-			position: Vector2,
-			radius: float,
-			width: float = -1.0,
-			filled: bool = true,
-			color: Color = Color(255, 255, 255, 1),
-			opacity: float = 1,
-			antialiased: bool = true
+			_position: Vector2,
+			_radius: float,
+			_width: float = -1.0,
+			_filled: bool = true,
+			_color: Color = Color(255, 255, 255, 1),
+			_opacity: float = 1,
+			_antialiased: bool = true
 		):
-		self.position = position
-		self.radius = radius
-		self.color = color
-		self.width = width
-		self.filled = filled
-		self.antialiased = antialiased
-		self.opacity = opacity
-		self.color.a = opacity
+		self.position = _position
+		self.radius = _radius
+		self.color = _color
+		self.width = _width
+		self.filled = _filled
+		self.antialiased = _antialiased
+		self.opacity = _opacity
+		self.color.a = _opacity
 
 	func draw(canvas_item: CanvasItem, offset: bool) -> void:
 		if self.filled:
