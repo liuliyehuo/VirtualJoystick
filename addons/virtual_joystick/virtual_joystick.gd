@@ -360,7 +360,7 @@ func _get_angle_delta(delta: Vector2, continuous: bool, clockwise: bool) -> floa
 
 func _set_joystick_presset(_value: _presset_enum) -> void:
 	joystick_presset_texture = _value
-	match (value):
+	match (_value):
 		_presset_enum.PRESSET_DEFAULT:
 			joystick_texture = _DEFAULT_JOYSTICK_TEXTURE
 		_presset_enum.NONE:
@@ -369,7 +369,7 @@ func _set_joystick_presset(_value: _presset_enum) -> void:
 
 func _set_stick_presset(_value: _presset_enum) -> void:
 	stick_presset_texture = _value
-	match (value):
+	match (_value):
 		_presset_enum.PRESSET_DEFAULT:
 			stick_texture = _DEFAULT_STICK_TEXTURE
 		_presset_enum.NONE:
