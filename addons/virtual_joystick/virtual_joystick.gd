@@ -51,6 +51,13 @@ var _warnings: PackedStringArray = []
 
 var _DEFAULT_JOYSTICK_TEXTURE = preload("res://addons/virtual_joystick/resources/textures/joystick_texture_1.png")
 var _DEFAULT_STICK_TEXTURE = preload("res://addons/virtual_joystick/resources/textures/stick_texture_1.png")
+
+enum _presset_enum {
+	## Nothing
+	NONE,
+	## Default presset texture
+	PRESSET_DEFAULT
+}
 #endregion Private Properties ====================================
 
 
@@ -99,8 +106,12 @@ var angle_degrees_not_clockwise: float = 0.0
 @export var joystick_use_textures: bool = false:
 	set(value):
 		joystick_use_textures = value
+		if value and joystick_texture == null:
+			_set_joystick_presset(joystick_presset_texture)
 		update_configuration_warnings()
 		queue_redraw()
+## Select one of the available models. More models will be available soon.
+@export var joystick_presset_texture: _presset_enum: set = _set_joystick_presset
 ## Select a texture for the joystick figure.
 @export var joystick_texture: Texture2D:
 	set(value):
@@ -140,8 +151,12 @@ var angle_degrees_not_clockwise: float = 0.0
 @export var stick_use_textures: bool = false:
 	set(value):
 		stick_use_textures = value
+		if value and stick_texture == null:
+			_set_stick_presset(stick_presset_texture)
 		update_configuration_warnings()
 		queue_redraw()
+## Select one of the available models. More models will be available soon.
+@export var stick_presset_texture: _presset_enum: set = _set_stick_presset
 ## Select a texture for the stick figure.
 @export var stick_texture: Texture2D:
 	set(value):
@@ -341,6 +356,25 @@ func _get_angle_delta(delta: Vector2, continuous: bool, clockwise: bool) -> floa
 	if continuous and angle_deg < 0.0:
 		angle_deg += 360.0
 	return angle_deg
+
+
+func _set_joystick_presset(_value: _presset_enum) -> void:
+	joystick_presset_texture = _value
+	match (value):
+		_presset_enum.PRESSET_DEFAULT:
+			joystick_texture = _DEFAULT_JOYSTICK_TEXTURE
+		_presset_enum.NONE:
+			if joystick_texture == _DEFAULT_JOYSTICK_TEXTURE:
+				joystick_texture = null
+
+func _set_stick_presset(_value: _presset_enum) -> void:
+	stick_presset_texture = _value
+	match (value):
+		_presset_enum.PRESSET_DEFAULT:
+			stick_texture = _DEFAULT_STICK_TEXTURE
+		_presset_enum.NONE:
+			if stick_texture == _DEFAULT_STICK_TEXTURE:
+				stick_texture = null
 #endregion Private Methods ===========================================
 
 
