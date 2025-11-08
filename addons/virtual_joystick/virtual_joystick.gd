@@ -74,11 +74,10 @@ var angle_degrees_not_clockwise: float = 0.0
 
 #region Exports ===================================================
 @export_category("Virtual Joystick")
-@export var use_textures: bool = false:
-	set(value):
-		use_textures = value
-		update_configuration_warnings()
-		queue_redraw()
+## Enables or disables the joystick input.
+@export var active: bool = true
+## Deadzone threshold (0.0 = off, 1.0 = full range).
+@export_range(0.0, 0.9, 0.001, "suffix:length") var deadzone: float = 0.1
 ## Global scale factor of the joystick.
 @export_range(0.1, 2.0, 0.001, "suffix:x", "or_greater") var scale_factor: float = 1.0:
 	set(value):
@@ -86,8 +85,6 @@ var angle_degrees_not_clockwise: float = 0.0
 		scale = Vector2(value, value)
 		_update_real_size()
 		queue_redraw()
-## Enables or disables the joystick input.
-@export var active: bool = true
 ## If true, the Joystick will only be displayed on the screen on mobile devices.
 @export var only_mobile: bool = false:
 	set(value):
@@ -98,8 +95,13 @@ var angle_degrees_not_clockwise: float = 0.0
 			visible = true
 			
 @export_category("Joystick")
+@export var joystick_use_textures: bool = false:
+	set(value):
+		joystick_use_textures = value
+		update_configuration_warnings()
+		queue_redraw()
 ## Select a texture for the joystick figure.
-@export var joystick_texture: Texture2D = _DEFAULT_JOYSTICK_TEXTURE:
+@export var joystick_texture: Texture2D:
 	set(value):
 		joystick_texture = value
 		update_configuration_warnings()
@@ -130,13 +132,16 @@ var angle_degrees_not_clockwise: float = 0.0
 		_stick_start_position = Vector2(_joystick_radius + _joystick_border_width, _joystick_radius + _joystick_border_width)
 		_stick.position = _stick_start_position
 		queue_redraw()
-## Deadzone threshold (0.0 = off, 1.0 = full range).
-@export_range(0.0, 0.9, 0.001, "suffix:length") var joystick_deadzone: float = 0.1
 
 
 @export_category("Stick")
+@export var stick_use_textures: bool = false:
+	set(value):
+		stick_use_textures = value
+		update_configuration_warnings()
+		queue_redraw()
 ## Select a texture for the stick figure.
-@export var stick_texture: Texture2D = _DEFAULT_STICK_TEXTURE:
+@export var stick_texture: Texture2D:
 	set(value):
 		stick_texture = value
 		update_configuration_warnings()
@@ -172,24 +177,24 @@ func _ready() -> void:
 
 
 func _draw() -> void:
-	if use_textures and joystick_texture and stick_texture:
+	if joystick_use_textures and joystick_texture:
 		var base_size = joystick_texture.get_size()
 		var base_scale = (_joystick_radius * 2) / base_size.x
-		
 		draw_set_transform(_joystick.position, 0, Vector2(base_scale, base_scale))
 		draw_texture(joystick_texture, -base_size / 2, Color(1, 1, 1, joystick_opacity))
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
-		
+	else:
+		_joystick.draw(self, false)
+			
+	if stick_use_textures and stick_texture:
 		var stick_size = stick_texture.get_size()
 		var stick_scale = (_stick_radius * 2) / stick_size.x
-		
 		draw_set_transform(_stick.position, 0, Vector2(stick_scale, stick_scale))
 		draw_texture(stick_texture, -stick_size / 2, Color(1, 1, 1, stick_opacity))
 		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 	else:
-		_joystick.draw(self, false)
 		_stick.draw(self, false)
-		
+
 	scale = Vector2(scale_factor, scale_factor)
 	set_size(Vector2((_joystick_radius * 2) + (_joystick_border_width * 2), (_joystick_radius * 2) + (_joystick_border_width * 2)))
 
@@ -215,8 +220,10 @@ func _gui_input(event: InputEvent) -> void:
 
 func _get_configuration_warnings() -> PackedStringArray:
 	_warnings = []
-	if use_textures and (joystick_texture == null or stick_texture == null):
-		_warnings.append("The joystick_texture and stick_texture properties must be set when using use_textures = true.")
+	if joystick_use_textures and (joystick_texture == null):
+		_warnings.append("The joystick_texture properties must be set when using joystick_use_textures = true.")
+	if stick_use_textures and (stick_texture == null):
+		_warnings.append("The stick_texture properties must be set when using stick_use_textures = true.")
 	return _warnings
 	
 #endregion Engine Methods =============================================
@@ -250,8 +257,8 @@ func _reset_values() -> void:
 	_stick.position = _stick_start_position
 	
 	var length = (_delta / _joystick.radius).length()
-	var deadzone = clamp(joystick_deadzone, 0.0, 0.99)
-	if length <= deadzone:
+	var dz = clamp(deadzone, 0.0, 0.99)
+	if length <= dz:
 		_in_deadzone = true
 		
 	queue_redraw()
@@ -261,16 +268,16 @@ func _reset_values() -> void:
 func _apply_deadzone(input_value: Vector2) -> Dictionary:
 	var length = input_value.length()
 	var result = Vector2.ZERO
-	var deadzone = clamp(joystick_deadzone, 0.0, 0.99)
+	var dz = clamp(deadzone, 0.0, 0.99)
 
-	if length <= deadzone:
+	if length <= dz:
 		_in_deadzone = true
 		result = Vector2.ZERO
 		length = 0.0
 	else:
 		_in_deadzone = false
 		# Re-scale linearly between deadzone and full range
-		var adjusted = (length - deadzone) / (1.0 - deadzone)
+		var adjusted = (length - dz) / (1.0 - dz)
 		result = input_value.normalized() * adjusted
 		length = adjusted
 
