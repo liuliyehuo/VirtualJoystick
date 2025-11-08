@@ -70,6 +70,7 @@ var angle_degrees_not_clockwise: float = 0.0
 
 
 #region Exports ===================================================
+@export_category("Virtual Joystick")
 @export var use_textures: bool = false:
 	set(value):
 		use_textures = value
