@@ -61,11 +61,11 @@ Designed for mobile and touchscreen games, it provides smooth analog input handl
 
 ## Signals
 
-| Signal                                                                           | Description                                            |
-| -------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `analogic_changed(value, distance, angle, angle_clockwise, angle_not_clockwise)` | Emitted whenever the stick moves outside the deadzone. |
-| `deadzone_enter()`                                                               | Emitted when the stick enters the deadzone.            |
-| `deadzone_leave()`                                                               | Emitted when the stick leaves the deadzone.            |
+| Signal                                                                           | Description                                 |
+| -------------------------------------------------------------------------------- | ------------------------------------------- |
+| `analogic_changed(value, distance, angle, angle_clockwise, angle_not_clockwise)` | Emitted when the stick is moved.            |
+| `deadzone_enter()`                                                               | Emitted when the stick enters the deadzone. |
+| `deadzone_leave()`                                                               | Emitted when the stick leaves the deadzone. |
 
 ---
 
