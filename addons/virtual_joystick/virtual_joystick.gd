@@ -130,6 +130,7 @@ var angle_degrees_not_clockwise: float = 0.0
 		joystick_use_textures = value
 		if value and joystick_texture == null:
 			_set_joystick_presset(joystick_presset_texture)
+		_verify_can_use_border()
 		update_configuration_warnings()
 		queue_redraw()
 ## Select one of the available models. More models will be available soon.
@@ -139,6 +140,7 @@ var angle_degrees_not_clockwise: float = 0.0
 	set(value):
 		joystick_texture = value
 		update_configuration_warnings()
+		_verify_can_use_border()
 		queue_redraw()
 ## Base color of the joystick background.
 @export_color_no_alpha() var joystick_color: Color = Color.WHITE:
@@ -398,7 +400,8 @@ func _set_joystick_presset(_value: _presset_enum) -> void:
 		_presset_enum.NONE:
 			if joystick_texture in [_DEFAULT_JOYSTICK_TEXTURE, _JOYSTICK_TEXTURE_2, _JOYSTICK_TEXTURE_3, _JOYSTICK_TEXTURE_4, _JOYSTICK_TEXTURE_5, _JOYSTICK_TEXTURE_6]:
 				joystick_texture = null
-
+	_verify_can_use_border()
+				
 func _set_stick_presset(_value: _presset_enum) -> void:
 	stick_presset_texture = _value
 	match (_value):
@@ -417,6 +420,11 @@ func _set_stick_presset(_value: _presset_enum) -> void:
 		_presset_enum.NONE:
 			if stick_texture in [_DEFAULT_STICK_TEXTURE, _STICK_TEXTURE_2, _STICK_TEXTURE_3, _STICK_TEXTURE_4, _STICK_TEXTURE_5, _STICK_TEXTURE_6]:
 				stick_texture = null
+
+
+func _verify_can_use_border() -> void:
+	if joystick_use_textures and not joystick_texture == null:
+		joystick_border = 1.0
 #endregion Private Methods ===========================================
 
 
