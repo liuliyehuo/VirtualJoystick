@@ -167,6 +167,7 @@ var angle_degrees_not_clockwise: float = 0.0
 		_joystick.position = _joystick_start_position
 		_stick_start_position = Vector2(_joystick_radius + _joystick_border_width, _joystick_radius + _joystick_border_width)
 		_stick.position = _stick_start_position
+		update_configuration_warnings()
 		queue_redraw()
 
 
@@ -265,6 +266,8 @@ func _get_configuration_warnings() -> PackedStringArray:
 		_warnings.append("The joystick_texture properties must be set when using joystick_use_textures = true.")
 	if stick_use_textures and (stick_texture == null):
 		_warnings.append("The stick_texture properties must be set when using stick_use_textures = true.")
+	if joystick_use_textures and joystick_texture != null and joystick_presset_texture != _presset_enum.NONE and joystick_border > 1.0:
+		_warnings.append("When using a texture preset, the ideal border height would be 1.0.")
 	return _warnings
 	
 #endregion Engine Methods =============================================
@@ -401,6 +404,7 @@ func _set_joystick_presset(_value: _presset_enum) -> void:
 			if joystick_texture in [_DEFAULT_JOYSTICK_TEXTURE, _JOYSTICK_TEXTURE_2, _JOYSTICK_TEXTURE_3, _JOYSTICK_TEXTURE_4, _JOYSTICK_TEXTURE_5, _JOYSTICK_TEXTURE_6]:
 				joystick_texture = null
 	_verify_can_use_border()
+	update_configuration_warnings()
 				
 func _set_stick_presset(_value: _presset_enum) -> void:
 	stick_presset_texture = _value
@@ -422,9 +426,11 @@ func _set_stick_presset(_value: _presset_enum) -> void:
 				stick_texture = null
 
 
-func _verify_can_use_border() -> void:
+func _verify_can_use_border() -> bool:
 	if joystick_use_textures and not joystick_texture == null:
 		joystick_border = 1.0
+		return false
+	return true
 #endregion Private Methods ===========================================
 
 
