@@ -119,3 +119,10 @@ func _process(delta):
 ![Screenshot 1](./addons/virtual_joystick/screenshots/5.png)
 
 ![Screenshot 2](./addons/virtual_joystick/screenshots/6.png)
+
+---
+
+## ❤️ Support
+
+If this project helps you, consider supporting:
+https://github.com/sponsors/Saulo-de-Souza
